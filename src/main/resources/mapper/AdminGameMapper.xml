@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.pots.admin.mapper.AdminGameMapper">
+    <select id="findAllGameByLangCode" resultType="com.pots.admin.model.vo.AdminGameSimpleVO">
+        select
+        g.id,
+        g.sort_order,
+        g.release_date,
+        gi.lang_code,
+        gi.name,
+        gi.category,
+        gi.introduction,
+        gi.project_type,
+        gi.release_status,
+        gr.url as imgUrl
+        from game g
+        left join game_i18n gi on g.id = gi.game_id and gi.lang_code = #{langCode}
+        left join game_resource gr on gr.id = (
+        select gr2.id
+        from game_resource gr2
+        where gr2.game_id = g.id
+        and gr2.resource_type = #{resourceType}
+        and (gr2.res_lang_code = #{langCode} or gr2.res_lang_code = '')
+        order by gr2.res_sort_order ASC
+        limit 1
+        )
+        where is_active = true
+        order by g.sort_order asc;
+    </select>
+
+    <select id="findGameById" resultType="com.pots.admin.model.vo.AdminGameDetailVO">
+        select
+        id,
+        sort_order,
+        release_date
+        from game
+        where id = #{id}
+        and is_active = true
+    </select>
+
+    <select id="findAllGameI18nByGameId" resultType="com.pots.admin.model.dto.AdminGameI18nDTO">
+        select
+        id,
+        game_id,
+        lang_code,
+        name,
+        category,
+        introduction,
+        description,
+        series,
+        project_type,
+        release_status
+        from game_i18n
+        where game_id = #{gameId}
+    </select>
+
+    <select id="findAllGameResImgByGameId" resultType="com.pots.admin.model.dto.AdminGameResDTO">
+        select
+        id,
+        game_id,
+        resource_type,
+        res_lang_code,
+        res_sort_order,
+        url
+        from game_resource
+        where game_id = #{gameId}
+        and resource_type = #{resourceType}
+    </select>
+
+</mapper>

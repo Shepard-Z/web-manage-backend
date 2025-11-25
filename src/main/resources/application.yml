@@ -1,0 +1,53 @@
+server:
+  port: 7032
+
+spring:
+  datasource:
+    # MySQL データベース接続URL
+    url: jdbc:mysql://localhost:5306/some_web
+    username: origin
+    password: xasdaxz189456
+    # MySQL JDBC ドライブ
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  web:
+    resources:
+      # 静的ファイルパスの射影 ブラウザが site/somefile.jpg を要求すると、Spring は upload/somefile.jpg でファイルを検索し、それを直接返す
+      static-locations: file:${user.dir}/upload/
+      # URL アクセスルール ブラウザが URL site/image/** にアクセスすると、上記の物理ディレクトリにマッピングされる -> site/upload/image/**
+  #      static-path-pattern: /image/**
+
+  servlet:
+    multipart:
+      # 各ファイルの最大サイズ
+      max-file-size: 5MB
+      # 各リクエストのファイル全体の最大サイズ
+      max-request-size: 20MB
+
+  mybatis-plus:
+    # SQLファイルのパース  !!!ここ単独のパッケージ名は"mappers"を使ってはいけない,でないとエラーになる
+    mapper-locations: classpath:mapper/*.xml
+#    ！！！ デフォルトで親クラスパスはすべてのサブクラスの簡略クラス名を自動的に作成しますが、
+#          配置するクラスを手動で作成しない限り、エンティティクラスをスキャンするパスをここで指定し、XML ファイルで簡略クラス名を使用することはできない
+#    例：type-aliases-package: com.pots.site.model.vo
+
+#    例：type-aliases-super-type: com.pots.common.model.BaseEntityOrigin
+
+logging:
+  level:
+    org.springframework.web: warn
+
+# mine
+snowflake:
+  # カスタム紀元（2025年4月3日 00:00:00 ms）
+  epoch: 1743638400000
+  workerIdBits: 3
+  datacenterIdBits: 2
+  # 1 ミリ秒あたり 128 個の ID を生成できる、JS number の範囲により、2094 まで安全に利用できる、長さ常に <64
+  sequenceBits: 7
+  workerId: 1
+  datacenterId: 1
+
+jwt:
+  secret: asdasgfxcjkimlljiohj4894321!
+  expireTime: 2400000

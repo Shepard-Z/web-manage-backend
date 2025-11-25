@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- 起動時にlogback自身の状態を出力 -->
+    <statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener"/>
+
+    <!-- admin のログファイル -->
+    <appender name="ADMIN_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/admin.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- 毎月新ファイルを作成 -->
+            <fileNamePattern>logs/admin_%d{yyyy_MM}.log</fileNamePattern>
+            <!-- 60月分（5年）のログを保存 -->
+            <maxHistory>60</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <!-- 出力フォーマット -->
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n-----%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- site のログファイル -->
+    <appender name="SITE_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/site.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/site_%d{yyyy_MM}.log</fileNamePattern>
+            <maxHistory>60</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <!-- 出力フォーマット -->
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n-----%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- デフォルト のログファイル -->
+    <appender name="ROOT_LOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/root.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/root_%d{yyyy_MM}.log</fileNamePattern>
+            <maxHistory>60</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <!-- 出力フォーマット -->
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n-----%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- admin モジュールは ADMIN_FILE を使用、このログは root のログに送信しない -->
+    <logger name="com.pots.admin" level="INFO" additivity="false">
+        <appender-ref ref="ADMIN_LOG"/>
+    </logger>
+
+    <!-- site モジュールは SITE_FILE を使用、このログは root のログに送信しない-->
+    <logger name="com.pots.site" level="INFO" additivity="false">
+        <appender-ref ref="SITE_LOG"/>
+    </logger>
+
+    <!-- root -->
+    <root level="INFO">
+        <appender-ref ref="ROOT_LOG"/>
+    </root>
+
+</configuration>

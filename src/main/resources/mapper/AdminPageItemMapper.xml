@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.pots.admin.mapper.AdminPageItemMapper">
+
+    <!-- 全部ページアイテムの取得 -->
+    <select id="findAllItemByPageName" resultType="com.pots.admin.model.dto.AdminPageItemAllDTO">
+        SELECT
+        p.id,
+        p.page_name,
+        p.item_category,
+        p.is_active,
+        p.creator_id,
+        p.create_time,
+        p.updater_id,
+        p.update_time,
+        pi.id AS i18n_id,
+        pi.lang_code,
+        pi.title,
+        pi.subtitle,
+        pi.introduction,
+        pr.id AS res_id,
+        pr.resource_type,
+        pr.res_lang_code,
+        pr.res_sort_order,
+        pr.url
+        FROM
+        page_item p
+        LEFT JOIN
+        page_item_i18n pi ON p.id = pi.page_item_id
+        LEFT JOIN
+        page_item_resource pr ON p.id = pr.page_item_id
+        <if test="resourceType != null">
+            AND pr.resource_type = #{resourceType}
+        </if>
+        WHERE
+        p.page_name = #{pageName}
+        ORDER BY
+        pi.id, pi.lang_code, pr.res_sort_order
+    </select>
+
+    <!-- ページアイテムの id により、属する resource の取得 -->
+    <select id="findPageItemResByItemId" resultType="com.pots.admin.model.dto.AdminPageItemResourceDTO">
+        select id,page_item_id,resource_type,res_lang_code,res_sort_order,url
+        from page_item_resource
+        where page_item_id in
+        <foreach item="id" collection="pageItemIdList" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+
+    <!-- ページアイテムの新規作成 -->
+    <insert id="insertPageItem">
+        insert into page_item(id, page_name, item_category,creator_id)
+        values
+        <foreach collection="pageItemList" item="pageItem" separator=",">
+            (#{pageItem.id}, #{pageItem.pageName}, #{pageItem.itemCategory},#{pageItem.creatorId})
+        </foreach>
+    </insert>
+
+    <!-- ページ多言語の新規作成 -->
+    <insert id="insertPageItemI18n">
+        insert into page_item_i18n(id, page_item_id,
+        lang_code,title,subtitle,introduction,creator_id)
+        values
+        <foreach collection="pageItemI18nList" item="pageItemI18n" separator=",">
+            (#{pageItemI18n.id}, #{pageItemI18n.pageItemId},
+            #{pageItemI18n.langCode},#{pageItemI18n.title},#{pageItemI18n.subtitle},
+            #{pageItemI18n.introduction},#{pageItemI18n.creatorId})
+        </foreach>
+    </insert>
+
+    <!-- ページ資源の新規作成 -->
+    <insert id="insertPageItemResource">
+        insert into page_item_resource(id, page_item_id,
+        resource_type,res_lang_code,res_sort_order,url,creator_id)
+        values
+        <foreach collection="pageItemResList" item="pageItemRes" separator=",">
+            (#{pageItemRes.id}, #{pageItemRes.pageItemId},#{pageItemRes.resourceType},
+            #{pageItemRes.resLangCode},#{pageItemRes.resSortOrder},#{pageItemRes.url},#{pageItemRes.creatorId})
+        </foreach>
+    </insert>
+
+    <!-- ページ多言語の更新 -->
+    <update id="updatePageItemI18n">
+        <foreach collection="pageItemI18nList" item="pageItemI18n" separator=";">
+            update page_item_i18n
+            set
+            title = #{pageItemI18n.title},
+            subtitle = #{pageItemI18n.subtitle},
+            introduction = #{pageItemI18n.introduction},
+            updater_id = #{pageItemI18n.updaterId}
+            where id = #{pageItemI18n.id}
+        </foreach>
+    </update>
+
+    <!-- ページ資源の更新 -->
+    <update id="updatePageItemResource">
+        <foreach collection="pageItemResList" item="pageItemRes" separator=";">
+            update page_item_resource
+            set
+            resource_type = #{pageItemRes.resourceType},
+            res_lang_code = #{pageItemRes.resLangCode},
+            res_sort_order = #{pageItemRes.resSortOrder},
+            url = #{pageItemRes.url},
+            updater_id = #{pageItemRes.updaterId}
+            where id = #{pageItemRes.id}
+        </foreach>
+    </update>
+
+    <!-- ページアイテムの削除 -->
+    <delete id="deletePageItemAndChild">
+        delete from page_item
+        where id in
+        <foreach collection="pageItemList" item="item" open="(" separator="," close=")">
+            #{item.idForRemove}
+        </foreach>
+    </delete>
+
+    <!-- ページ多言語の削除 -->
+    <delete id="deletePageItemI18n">
+        delete from page_item_i18n
+        where id in
+        <foreach collection="pageItemI18nList" item="item" open="(" separator="," close=")">
+            #{item.idForRemove}
+        </foreach>
+
+    </delete>
+
+    <!-- ページ資源の削除 -->
+    <delete id="deletePageItemResource">
+        delete from page_item_resource
+        where id in
+        <foreach collection="pageItemResList" item="item" open="(" separator="," close=")">
+            #{item.idForRemove}
+        </foreach>
+    </delete>
+
+
+</mapper>

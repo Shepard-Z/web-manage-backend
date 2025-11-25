@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 指定したlangCodeがない場合、他の言語があっても、対象データ数が0になる
+     但し、コントローラー層でlangCodeに対して検証済み、イリーガルの言語が指定されても、デフォルトの"zh"に変換される
+     フロントでもすでにリクエストインターセプターで制御しているため、三重保険である-->
+<mapper namespace="com.pots.site.mapper.CharaMapper">
+
+    <!-- gameIdでキャラ詳細情報の抽出 -->
+    <select id="findCharaDetailByGameId" resultType="com.pots.site.model.dto.CharaDetailDTO">
+        SELECT
+        chara.id,
+        chara.age,
+        chara_i18n.name,
+        chara_i18n.gender,
+        chara_i18n.race,
+        chara_i18n.chara_class,
+        chara_i18n.introduction,
+        cr.url AS img_url
+        FROM chara
+        LEFT JOIN chara_i18n
+        ON chara.id = chara_i18n.chara_id
+        AND chara_i18n.lang_code = #{langCode}
+        LEFT JOIN chara_resource cr
+        ON cr.id = (
+        SELECT cr2.id
+        FROM chara_resource cr2
+        WHERE cr2.chara_id = chara.id
+        AND cr2.resource_type = #{resourceType}
+        AND (cr2.res_lang_code = #{langCode} OR cr2.res_lang_code = '')
+        ORDER BY cr2.res_sort_order ASC
+        LIMIT 1
+        )
+        WHERE chara.id IN (
+        SELECT chara_id
+        FROM game_chara_mid
+        WHERE game_id = #{gameId}
+        )
+        AND chara.is_active = true;
+
+    </select>
+
+    <!-- gameIdで関連キャラの簡略情報を抽出 -->
+    <select id="findCharaForGameByGameId" resultType="com.pots.site.model.dto.CharaForGameDTO">
+        SELECT
+        chara.id,
+        chara_i18n.name,
+        cr.url AS img_url
+        FROM chara
+        LEFT JOIN chara_i18n
+        ON chara.id = chara_i18n.chara_id
+        AND chara_i18n.lang_code = #{langCode}
+        LEFT JOIN chara_resource cr
+        ON cr.id = (
+        SELECT cr2.id
+        FROM chara_resource cr2
+        WHERE cr2.chara_id = chara.id
+        AND cr2.resource_type = #{resourceType}
+        AND (cr2.res_lang_code = #{langCode} OR cr2.res_lang_code = '')
+        ORDER BY cr2.res_sort_order ASC
+        LIMIT 1
+        )
+        WHERE chara.id IN (
+        SELECT chara_id
+        FROM game_chara_mid
+        WHERE game_id = #{gameId}
+        )
+        AND chara.is_active = true;
+
+
+    </select>
+
+</mapper>

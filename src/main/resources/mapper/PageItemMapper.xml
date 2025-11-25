@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.pots.site.mapper.PageItemMapper">
+    <!-- ページアイテム抽出 -->
+    <select id="findPageItemByPageName" resultType="com.pots.site.model.dto.PageItemDTO">
+        SELECT
+        page_item.id,
+        page_item.item_category,
+        page_item_i18n.title,
+        page_item_i18n.subtitle,
+        page_item_i18n.introduction
+        FROM page_item LEFT JOIN page_item_i18n
+        ON page_item.id = page_item_i18n.page_item_id
+        AND page_item_i18n.lang_code = #{langCode}
+        WHERE
+        page_item.page_name = #{pageName}
+        AND page_item.is_active = true;
+    </select>
+
+    <!-- ページアイテムの画像を抽出 -->
+    <select id="findResourceByPageItemId" resultType="com.pots.site.model.dto.PageItemResourceDTO">
+        SELECT
+        page_item_resource.page_item_id,
+        page_item_resource.url
+        FROM page_item_resource
+        WHERE
+        (page_item_resource.res_lang_code = #{langCode} OR page_item_resource.res_lang_code = '')
+        AND page_item_resource.resource_type = #{resourceType}
+        AND page_item_resource.page_item_id IN
+        <foreach collection="pageItemIdSet" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        ORDER BY page_item_resource.res_sort_order;
+    </select>
+
+</mapper>

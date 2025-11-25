@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 指定したlangCodeがない場合、他の言語があっても、対象データ数が0になる
+     但し、コントローラー層でlangCodeに対して検証済み、イリーガルの言語が指定されても、デフォルトの"zh"に変換される
+     フロントでもすでにリクエストインターセプターで制御しているため、三重保険である-->
+<mapper namespace="com.pots.site.mapper.GameMapper">
+    <!-- ゲーム全部抽出(game.sort_order の order by はフォールバック，実際現在はロジック層で手動で並べ替えています 2025.05.08) -->
+    <select id="findAllGame" resultType="com.pots.site.model.dto.GameMainDTO">
+        SELECT
+        game.id,
+        game.release_date,
+        game_i18n.name,
+        game_i18n.category,
+        game_i18n.introduction,
+        game_i18n.project_type,
+        game_i18n.release_status,
+        gr.url as img_url
+        FROM
+        game
+        LEFT JOIN game_i18n ON game.id = game_i18n.game_id
+        AND game_i18n.lang_code = #{langCode}
+        LEFT JOIN game_resource gr ON gr.id = (
+        SELECT gr2.id
+        FROM game_resource gr2
+        WHERE gr2.game_id = game.id
+        AND gr2.resource_type = #{resourceType}
+        AND (gr2.res_lang_code = #{langCode} OR gr2.res_lang_code = '')
+        ORDER BY gr2.res_sort_order ASC
+        LIMIT 1
+        )
+        WHERE
+        game.is_active = true
+        ORDER BY game.sort_order ASC;
+
+    </select>
+
+    <!-- gameIdでゲーム詳細抽出 -->
+    <select id="findGameDetailByGameId" resultType="com.pots.site.model.dto.GameDetailDTO">
+        SELECT
+        game.id,
+        game.release_date,
+        game_i18n.name,
+        game_i18n.category,
+        game_i18n.introduction,
+        game_i18n.description,
+        game_i18n.series,
+        game_i18n.project_type,
+        game_i18n.release_status
+        FROM
+        game
+        LEFT JOIN game_i18n ON game.id = game_i18n.game_id
+        AND game_i18n.lang_code = #{langCode}
+        WHERE
+        game.id = #{gameId}
+        AND game.is_active = true;
+    </select>
+
+    <!-- 全ゲームの簡略情報を抽出 -->
+    <select id="findAllGameForChara" resultType="com.pots.site.model.dto.GameForCharaDTO">
+        SELECT
+        game.id,
+        game.sort_order,
+        game_i18n.name,
+        gr.url AS img_url
+        FROM game
+        LEFT JOIN game_i18n
+        ON game.id = game_i18n.game_id
+        AND game_i18n.lang_code = #{langCode}
+        LEFT JOIN game_resource gr
+        ON gr.id = (
+        SELECT gr2.id
+        FROM game_resource gr2
+        WHERE gr2.game_id = game.id
+        AND gr2.resource_type = #{resourceType}
+        AND (gr2.res_lang_code = #{langCode} OR gr2.res_lang_code = '')
+        ORDER BY gr2.res_sort_order ASC
+        LIMIT 1
+        )
+        WHERE game.is_active = true
+        ORDER BY game.sort_order ASC;
+    </select>
+
+    <!-- ゲームの画像全部抽出 -->
+    <select id="findGameImgListByGameId">
+        SELECT
+        url
+        FROM
+        game_resource
+        where game_id = #{gameId}
+        AND game_resource.resource_type = #{resourceType}
+        AND (game_resource.res_lang_code = #{langCode} OR game_resource.res_lang_code = '')
+        ORDER BY res_sort_order ASC;
+    </select>
+</mapper>
